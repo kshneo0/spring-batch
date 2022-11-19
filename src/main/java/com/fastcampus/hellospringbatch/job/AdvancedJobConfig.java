@@ -10,6 +10,7 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,9 @@ import org.springframework.context.annotation.Configuration;
  * fileName : AdvancedJobConfig
  * author :  KimSangHoon
  * date : 2022/11/15
+ *
+ * --spring.batch.job.names=advancedJob targetDate=2022-01-01
+ *
  */
 @Configuration
 @AllArgsConstructor
@@ -58,10 +62,28 @@ public class AdvancedJobConfig {
 
     @JobScope
     @Bean
-    public Step advancedStep(Tasklet advancedTasklet) {
+    public Step advancedStep(StepExecutionListener stepExecutionListener,Tasklet advancedTasklet) {
         return stepBuilderFactory.get("advancedStep")
+                .listener(stepExecutionListener)
                 .tasklet(advancedTasklet)
                 .build();
+    }
+
+    @StepScope
+    @Bean
+    public StepExecutionListener stepExecutionListener() {
+        return new StepExecutionListener() {
+            @Override
+            public void beforeStep(StepExecution stepExecution) {
+                log.info("[StepExecutionListener#beforeStep] stepExecution is " + stepExecution.getStatus());
+            }
+
+            @Override
+            public ExitStatus afterStep(StepExecution stepExecution) {
+                log.info("[StepExecutionListener#afterStep] stepExecution is " + stepExecution.getStatus());
+                return stepExecution.getExitStatus();
+            }
+        };
     }
 
     @StepScope
@@ -71,8 +93,8 @@ public class AdvancedJobConfig {
             log.info("[AdvancedJobConfig] JobParameter - targetDate = " + targetDate);
             //LocalDate executionDate = LocalDate.parse(targetDate);
             log.info("[AdvancedJobConfig] executed advancedTasklet");
-            throw new RuntimeException("ERROR!!!!!!!!!!!!");
-//            return RepeatStatus.FINISHED;
+//            throw new RuntimeException("ERROR!!!!!!!!!!!!");
+            return RepeatStatus.FINISHED;
         };
     }
 }
