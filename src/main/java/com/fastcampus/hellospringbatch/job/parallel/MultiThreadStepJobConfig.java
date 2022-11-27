@@ -30,8 +30,8 @@ import java.io.IOException;
  * fileName : MultiThreadStepJobConfig
  * author :  KimSangHoon
  * date : 2022/11/20
- *
- *  --spring.batch.job.names=multiThreadStepJob
+ * <p>
+ * --spring.batch.job.names=multiThreadStepJob
  */
 
 /**
@@ -44,7 +44,7 @@ public class MultiThreadStepJobConfig {
     private final StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job multiThreadStepJob(Step multiThreadStep){
+    public Job multiThreadStepJob(Step multiThreadStep) {
         return jobBuilderFactory.get("multiThreadStepJob")
                 .incrementer(new RunIdIncrementer())
                 .start(multiThreadStep)
@@ -57,7 +57,7 @@ public class MultiThreadStepJobConfig {
                                 ItemProcessor<AmountDto, AmountDto> amountFileItemProcessor,
                                 FlatFileItemWriter<AmountDto> amountFileItemWriter,
                                 TaskExecutor taskExecutor
-                                ) {
+    ) {
         return stepBuilderFactory.get("multiThreadStep")
                 .<AmountDto, AmountDto>chunk(10)
                 .reader(amountFileItemReader)
@@ -68,8 +68,9 @@ public class MultiThreadStepJobConfig {
     }
 
     @Bean
-    public TaskExecutor taskExecutor(){
+    public TaskExecutor taskExecutor() {
         SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor("spring-batch-task-executor");
+        taskExecutor.setConcurrencyLimit(4);
         return taskExecutor;
     }
 
@@ -99,7 +100,7 @@ public class MultiThreadStepJobConfig {
     public FlatFileItemWriter<AmountDto> amountFileItemWriter() throws IOException {
 
         BeanWrapperFieldExtractor<AmountDto> fieldExtractor = new BeanWrapperFieldExtractor<>();
-        fieldExtractor.setNames(new String[] {"index","name","amount"});
+        fieldExtractor.setNames(new String[]{"index", "name", "amount"});
         fieldExtractor.afterPropertiesSet();
 
         DelimitedLineAggregator<AmountDto> lineAggregator = new DelimitedLineAggregator<>();
